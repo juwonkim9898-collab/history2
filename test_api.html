@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API 테스트</title>
+</head>
+<body>
+    <h1>백엔드 API 테스트</h1>
+    
+    <button onclick="testToken()">1. 토큰 발급</button>
+    <button onclick="testRecords()">2. 기록 조회</button>
+    <button onclick="testHealth()">3. 헬스 체크</button>
+    
+    <pre id="result"></pre>
+    
+    <script>
+        const API_URL = 'http://127.0.0.1:8000';
+        let token = null;
+        
+        function log(message) {
+            document.getElementById('result').textContent += JSON.stringify(message, null, 2) + '\n\n';
+        }
+        
+        async function testHealth() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                log({ status: 'Health Check', data });
+            } catch (error) {
+                log({ status: 'Health Check Failed', error: error.message });
+            }
+        }
+        
+        async function testToken() {
+            try {
+                const response = await fetch(`${API_URL}/generate-test-token`);
+                const data = await response.json();
+                token = data.token;
+                log({ status: 'Token Generated', token: token.substring(0, 50) + '...' });
+            } catch (error) {
+                log({ status: 'Token Failed', error: error.message });
+            }
+        }
+        
+        async function testRecords() {
+            if (!token) {
+                alert('먼저 토큰을 발급하세요!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/records`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                log({ status: 'Records Retrieved', count: data.data?.records?.length || 0, data });
+            } catch (error) {
+                log({ status: 'Records Failed', error: error.message });
+            }
+        }
+    </script>
+</body>
+</html>

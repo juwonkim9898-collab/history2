@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 배경 이미지 부드럽게 로딩 */
+body {
+  background-color: #0a0a0a;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url(/library-bg.png);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  z-index: -1;
+  animation: fadeIn 0.3s ease-in forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+/* 왼쪽 페이지 - 스크롤바 완전히 숨김 */
+.page-main-content-left {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.page-main-content-left::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 오른쪽 페이지 - 커스텀 스크롤바 스타일 */
+.page-main-content::-webkit-scrollbar {
+  width: 14px !important;
+}
+
+.page-main-content::-webkit-scrollbar-track {
+  background: rgba(139, 90, 43, 0.15) !important;
+  border-radius: 7px !important;
+  margin: 4px 0 !important;
+}
+
+.page-main-content::-webkit-scrollbar-thumb {
+  background: rgba(139, 90, 43, 0.5) !important;
+  border-radius: 7px !important;
+  border: 2px solid rgba(249, 243, 227, 0.5) !important;
+  transition: background 0.3s ease !important;
+}
+
+.page-main-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 90, 43, 0.7) !important;
+  border-color: rgba(249, 243, 227, 0.7) !important;
+}
+
+.page-main-content::-webkit-scrollbar-thumb:active {
+  background: rgba(139, 90, 43, 0.9) !important;
+}
+
+/* Firefox 스크롤바 - 오른쪽 페이지만 */
+.page-main-content {
+  scrollbar-width: auto !important;
+  scrollbar-color: rgba(139, 90, 43, 0.5) rgba(139, 90, 43, 0.15) !important;
+}
+
+/* 스크롤 동작 부드럽게 */
+.page-main-content,
+.page-main-content-left {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 목차 스크롤바 스타일 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(139, 90, 43, 0.05);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(139, 90, 43, 0.3);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 90, 43, 0.5);
+}

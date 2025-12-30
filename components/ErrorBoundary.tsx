@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
-// 1. Props와 State의 타입을 정의합니다.
 interface Props {
   children: ReactNode;
 }
@@ -9,12 +8,10 @@ interface State {
   hasError: boolean;
 }
 
-// 2. React.Component<Props, State>를 통해 타입을 명시합니다.
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false
   };
-    props: any;
 
   public static getDerivedStateFromError(_: Error): State {
     return { hasError: true };

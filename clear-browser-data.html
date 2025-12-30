@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>브라우저 데이터 완전 삭제</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #d32f2f;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #b71c1c;
+        }
+        .success {
+            background: #4caf50;
+        }
+        .success:hover {
+            background: #388e3c;
+        }
+        #log {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ 브라우저 데이터 완전 삭제</h1>
+        <p>이 페이지는 브라우저에 저장된 모든 로컬 데이터를 삭제합니다.</p>
+        
+        <button onclick="clearAllData()">모든 데이터 삭제</button>
+        <button onclick="checkData()">현재 데이터 확인</button>
+        <button class="success" onclick="goToApp()">앱으로 이동</button>
+        
+        <div id="log"></div>
+    </div>
+
+    <script>
+        const log = document.getElementById('log');
+        
+        function addLog(message) {
+            log.textContent += message + '\n';
+            console.log(message);
+        }
+
+        async function clearAllData() {
+            log.textContent = '';
+            addLog('=== 데이터 삭제 시작 ===\n');
+            
+            // 1. IndexedDB 삭제
+            try {
+                addLog('1. IndexedDB 삭제 중...');
+                const dbNames = ['historyDB', 'grimoireDB', 'history', 'grimoire', 'keyval-store'];
+                
+                for (const dbName of dbNames) {
+                    try {
+                        await new Promise((resolve, reject) => {
+                            const request = indexedDB.deleteDatabase(dbName);
+                            request.onsuccess = () => {
+                                addLog(`   ✅ ${dbName} 삭제 완료`);
+                                resolve();
+                            };
+                            request.onerror = () => {
+                                addLog(`   ⚠️ ${dbName} 삭제 실패 (존재하지 않을 수 있음)`);
+                                resolve();
+                            };
+                            request.onblocked = () => {
+                                addLog(`   ⚠️ ${dbName} 삭제 차단됨`);
+                                resolve();
+                            };
+                        });
+                    } catch (err) {
+                        addLog(`   ❌ ${dbName} 오류: ${err.message}`);
+                    }
+                }
+            } catch (err) {
+                addLog(`❌ IndexedDB 삭제 오류: ${err.message}`);
+            }
+            
+            // 2. localStorage 삭제
+            try {
+                addLog('\n2. localStorage 삭제 중...');
+                const beforeCount = localStorage.length;
+                localStorage.clear();
+                addLog(`   ✅ ${beforeCount}개 항목 삭제 완료`);
+            } catch (err) {
+                addLog(`❌ localStorage 삭제 오류: ${err.message}`);
+            }
+            
+            // 3. sessionStorage 삭제
+            try {
+                addLog('\n3. sessionStorage 삭제 중...');
+                const beforeCount = sessionStorage.length;
+                sessionStorage.clear();
+                addLog(`   ✅ ${beforeCount}개 항목 삭제 완료`);
+            } catch (err) {
+                addLog(`❌ sessionStorage 삭제 오류: ${err.message}`);
+            }
+            
+            // 4. 쿠키 삭제
+            try {
+                addLog('\n4. 쿠키 삭제 중...');
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const eqPos = cookie.indexOf('=');
+                    const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+                    document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                }
+                addLog(`   ✅ ${cookies.length}개 쿠키 삭제 완료`);
+            } catch (err) {
+                addLog(`❌ 쿠키 삭제 오류: ${err.message}`);
+            }
+            
+            // 5. Cache Storage 삭제
+            try {
+                addLog('\n5. Cache Storage 삭제 중...');
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    for (const cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        addLog(`   ✅ ${cacheName} 캐시 삭제 완료`);
+                    }
+                } else {
+                    addLog('   ⚠️ Cache Storage 미지원');
+                }
+            } catch (err) {
+                addLog(`❌ Cache Storage 삭제 오류: ${err.message}`);
+            }
+            
+            addLog('\n=== ✅ 모든 데이터 삭제 완료 ===');
+            addLog('\n이제 앱으로 이동하여 새로고침하세요.');
+        }
+
+        async function checkData() {
+            log.textContent = '';
+            addLog('=== 현재 데이터 확인 ===\n');
+            
+            // IndexedDB 확인
+            try {
+                addLog('1. IndexedDB:');
+                if (indexedDB.databases) {
+                    const databases = await indexedDB.databases();
+                    if (databases.length === 0) {
+                        addLog('   ✅ 없음');
+                    } else {
+                        databases.forEach(db => {
+                            addLog(`   - ${db.name} (버전: ${db.version})`);
+                        });
+                    }
+                } else {
+                    addLog('   ⚠️ databases() 미지원 - 수동 확인 필요');
+                }
+            } catch (err) {
+                addLog(`   ❌ 오류: ${err.message}`);
+            }
+            
+            // localStorage 확인
+            addLog('\n2. localStorage:');
+            if (localStorage.length === 0) {
+                addLog('   ✅ 없음');
+            } else {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    addLog(`   - ${key}`);
+                }
+            }
+            
+            // sessionStorage 확인
+            addLog('\n3. sessionStorage:');
+            if (sessionStorage.length === 0) {
+                addLog('   ✅ 없음');
+            } else {
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    addLog(`   - ${key}`);
+                }
+            }
+            
+            // 쿠키 확인
+            addLog('\n4. 쿠키:');
+            if (!document.cookie) {
+                addLog('   ✅ 없음');
+            } else {
+                const cookies = document.cookie.split(';');
+                cookies.forEach(cookie => {
+                    addLog(`   - ${cookie.trim()}`);
+                });
+            }
+            
+            addLog('\n=== 확인 완료 ===');
+        }
+
+        function goToApp() {
+            window.location.href = '/';
+        }
+
+        // 페이지 로드 시 자동 확인
+        window.onload = () => {
+            checkData();
+        };
+    </script>
+</body>
+</html>
