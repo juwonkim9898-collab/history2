@@ -337,22 +337,31 @@ export const Grimoire: React.FC<GrimoireProps> = ({ content, isLoading, onFlip, 
   return (
     <div className="relative flex justify-center items-center py-4 perspective-1000">
       
-      {/* 책 외부 가죽 표지 - 둥근 모서리 */}
+      {/* 책 컨테이너 - overflow hidden으로 레이어들을 가둠 */}
       <div 
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-[20px] overflow-hidden"
+        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 rounded-[20px]"
         style={{
           width: bookDimensions.isMobile ? bookDimensions.width + 20 : (bookDimensions.width * 2) + 40,
           height: bookDimensions.height + 30,
-          background: 'linear-gradient(135deg, #3e2723 0%, #2a1a15 50%, #1a0f0a 100%)',
-          boxShadow: `
-            0 30px 60px -15px rgba(0, 0, 0, 0.8),
-            0 0 0 3px #5d4037,
-            inset 0 2px 4px rgba(255, 255, 255, 0.1),
-            inset 0 -2px 4px rgba(0, 0, 0, 0.5)
-          `
+          overflow: 'hidden',
+          zIndex: 0
         }}
       >
-        <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/black-leather.png')]"></div>
+        {/* 책 외부 가죽 표지 - 둥근 모서리 */}
+        <div 
+          className="absolute inset-0 rounded-[20px]"
+          style={{
+            background: 'linear-gradient(135deg, #3e2723 0%, #2a1a15 50%, #1a0f0a 100%)',
+            boxShadow: `
+              0 30px 60px -15px rgba(0, 0, 0, 0.8),
+              0 0 0 3px #5d4037,
+              inset 0 2px 4px rgba(255, 255, 255, 0.1),
+              inset 0 -2px 4px rgba(0, 0, 0, 0.5)
+            `
+          }}
+        >
+          <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/black-leather.png')]"></div>
+        </div>
       </div>
 
       {/* 페이지 레이어들 - 왼쪽 (더 자연스럽게) */}

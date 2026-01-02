@@ -264,7 +264,7 @@ const App = () => {
       )}
 
       {/* 메인 컨텐츠 영역 */}
-      <div className="flex-1 flex flex-col items-center overflow-y-auto scrollbar-thin scrollbar-thumb-amber-900/50 scrollbar-track-transparent hover:scrollbar-thumb-amber-800/70">
+      <div className="flex-1 flex flex-col items-center overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
 
       {/* 상단 검색바 영역 */}
       <div className="z-20 w-full max-w-2xl px-4 py-2 mt-1 flex flex-col items-center gap-2">
