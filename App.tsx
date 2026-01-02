@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Grimoire } from './components/Grimoire';
-import { fetchHistoryStory } from './services/geminiService';
 import { historyDB, clearLocalDB } from './services/db';
 import { HistoryEventUI, AppState, KOREAN_UI_TEXTS } from './types';
-import { Search, Sparkles, Feather, Trash2, Tag, X } from 'lucide-react';
+import { Search, Sparkles, Trash2, Tag, X } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 
 const App = () => {
@@ -170,25 +169,26 @@ const App = () => {
     setSelectedTag(tag === selectedTag ? '' : tag);
   };
 
-  return (
-    <div 
-      className="min-h-screen bg-[#0a0a0a] flex overflow-hidden relative"
-      style={{
-        backgroundImage: 'url(/library-bg.png)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed', // 배경 고정 (스크롤 시 움직이지 않음)
-        willChange: 'auto', // GPU 가속 방지 (움찔거림 방지)
-        transform: 'translateZ(0)' // 하드웨어 가속 활성화
-      }}
-    >
-      
-      {/* 배경 오버레이 (이미지 위에 어두운 레이어) */}
-      <div className="absolute inset-0 bg-black/40 pointer-events-none"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#1a100a]/50 via-transparent to-black/60 opacity-80 pointer-events-none"></div>
+  // 배경 스타일을 useMemo로 메모이제이션 (리렌더링 시 재생성 방지)
+  const backgroundStyle = useMemo(() => ({
+    backgroundImage: 'url(/library-bg.png)',
+    backgroundSize: 'cover' as const,
+    backgroundPosition: 'center' as const,
+    backgroundRepeat: 'no-repeat' as const,
+    backgroundAttachment: 'fixed' as const
+  }), []);
 
-      {/* 사이드바 - 검색 결과 */}
+  return (
+    <div className="min-h-screen bg-background relative overflow-hidden w-full">
+      {/* 고정 배경 레이어 */}
+      <div className="fixed inset-0 pointer-events-none" style={backgroundStyle}>
+        {/* 단일 오버레이 */}
+        <div className="absolute inset-0 bg-black/50"></div>
+      </div>
+
+      {/* 콘텐츠 레이어 */}
+      <div className="relative z-10 min-h-screen flex overflow-hidden">
+
       {showSidebar && (
         <div className="fixed left-0 top-0 h-full w-80 bg-[#1a120b]/95 backdrop-blur-sm border-r border-amber-900/30 z-30 overflow-y-auto shadow-2xl">
           <div className="p-6">
@@ -282,29 +282,28 @@ const App = () => {
           onSubmit={handleSearch}
           className="relative w-full group transition-all duration-300 focus-within:scale-105"
         >
-          <div className="absolute inset-0 bg-amber-600/20 blur-xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
-          
-          <input 
-            type="text" 
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={KOREAN_UI_TEXTS.searchPlaceholder}
-            className="w-full bg-[#1a120b] border border-[#3e2723] text-amber-100/90 placeholder-amber-900/50 
-                       font-serif text-base py-2 pl-10 pr-10 rounded-full shadow-2xl focus:outline-none focus:border-amber-600/50 focus:ring-1 focus:ring-amber-600/30 transition-all relative z-10"
-          />
-          <Feather className="absolute left-3 top-1/2 transform -translate-y-1/2 text-amber-700 w-4 h-4 pointer-events-none z-20" />
-          
-          <button 
-            type="submit"
-            disabled={appState === AppState.LOADING}
-            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#3e2723] hover:bg-[#4e342e] text-amber-100 p-2 rounded-full transition-colors disabled:opacity-50 z-20"
-          >
-            {appState === AppState.LOADING ? (
-              <Sparkles className="w-4 h-4 animate-spin" />
-            ) : (
-              <Search className="w-4 h-4" />
-            )}
-          </button>
+          <div className="relative">
+            <input 
+              type="text" 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={KOREAN_UI_TEXTS.searchPlaceholder}
+              disabled={appState === AppState.LOADING}
+              className="w-full px-6 py-4 pr-14 text-lg rounded-full border-4 border-amber-700 bg-amber-50/95 text-amber-900 placeholder-amber-700 focus:outline-none focus:ring-4 focus:ring-amber-500 disabled:opacity-50 shadow-2xl backdrop-blur-sm font-serif"
+            />
+            
+            <button 
+              type="submit"
+              disabled={appState === AppState.LOADING || !query.trim()}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-amber-700 text-white rounded-full hover:bg-amber-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
+            >
+              {appState === AppState.LOADING ? (
+                <Sparkles className="w-5 h-5 animate-spin" />
+              ) : (
+                <Search className="w-5 h-5" />
+              )}
+            </button>
+          </div>
         </form>
 
         {/* 최근 본 기록 (날짜 태그) */}
@@ -457,6 +456,7 @@ const App = () => {
       <footer className="w-full text-center py-1 text-amber-900/20 font-serif text-[9px] tracking-widest z-20 uppercase">
         M M X X V  •  G R I M O I R E
       </footer>
+      </div>
       </div>
     </div>
   );

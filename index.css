@@ -2,33 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 배경 이미지 부드럽게 로딩 */
-body {
-  background-color: #0a0a0a;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url(/library-bg.png);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0;
-  z-index: -1;
-  animation: fadeIn 0.3s ease-in forwards;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-  }
-}
-
 /* 왼쪽 페이지 - 스크롤바 완전히 숨김 */
 .page-main-content-left {
   scrollbar-width: none !important;

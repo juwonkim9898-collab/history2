@@ -218,7 +218,7 @@ export const Grimoire: React.FC<GrimoireProps> = ({ content, isLoading, onFlip, 
       const rightPageNum = 4 + (index * 2);
       
       // 이미지 URL (content에서 image_url 추출, 없으면 기본 이미지)
-      const imageUrl = item.parsed.image_url || 'https://via.placeholder.com/300x400/f4e4bc/8b5a2b?text=No+Image';
+      const imageUrl = item.parsed.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect width="300" height="400" fill="%23f4e4bc"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="serif" font-size="20" fill="%238b5a2b"%3E이미지 없음%3C/text%3E%3C/svg%3E';
       
       // 왼쪽 페이지 - 제목, 연도, 이미지
       pages.push(
@@ -258,8 +258,8 @@ export const Grimoire: React.FC<GrimoireProps> = ({ content, isLoading, onFlip, 
                     className="w-full h-full object-cover"
                     style={{ filter: 'sepia(0.2) contrast(0.9)' }}
                     onError={(e) => {
-                      // 이미지 로드 실패 시 기본 이미지
-                      e.currentTarget.src = 'https://via.placeholder.com/300x400/f4e4bc/8b5a2b?text=No+Image';
+                      // 이미지 로드 실패 시 SVG placeholder로 대체
+                      e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect width="300" height="400" fill="%23f4e4bc"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="serif" font-size="20" fill="%238b5a2b"%3E이미지 없음%3C/text%3E%3C/svg%3E';
                     }}
                   />
                 </div>
