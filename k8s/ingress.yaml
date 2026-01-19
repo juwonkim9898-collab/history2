@@ -1,0 +1,68 @@
+# Ingress - 외부 트래픽 라우팅 (AWS ALB Ingress Controller 사용)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: history-app-ingress
+  namespace: history-app
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+spec:
+  rules:
+  # 프론트엔드 (메인 도메인)
+  - host: history-app.com  # 실제 도메인으로 변경
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend
+            port:
+              number: 80
+  # API 서버들
+  - host: api.history-app.com  # 실제 도메인으로 변경
+    http:
+      paths:
+      # Auth API
+      - path: /auth
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-api
+            port:
+              number: 8000
+      # Library API (메인 백엔드)
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: library-api
+            port:
+              number: 8000
+      # Journal API
+      - path: /journal
+        pathType: Prefix
+        backend:
+          service:
+            name: journal-api
+            port:
+              number: 8000
+      # Image Generator API
+      - path: /image
+        pathType: Prefix
+        backend:
+          service:
+            name: image-generator-api
+            port:
+              number: 8000
+      # STT API
+      - path: /stt
+        pathType: Prefix
+        backend:
+          service:
+            name: stt-api
+            port:
+              number: 8000

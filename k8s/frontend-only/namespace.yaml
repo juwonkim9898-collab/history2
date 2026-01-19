@@ -1,0 +1,8 @@
+# Namespace 정의
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: history-app
+  labels:
+    app: history
+    environment: production

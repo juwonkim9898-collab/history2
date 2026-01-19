@@ -1,0 +1,109 @@
+# Journal API - Stable Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: journal-api-stable
+  namespace: history-app
+  labels:
+    app: journal-api
+    version: stable
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: journal-api
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: journal-api
+        version: stable
+    spec:
+      containers:
+      - name: journal-api
+        image: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com/journal-api:stable
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+---
+# Journal API - Canary Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: journal-api-canary
+  namespace: history-app
+  labels:
+    app: journal-api
+    version: canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: journal-api
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: journal-api
+        version: canary
+    spec:
+      containers:
+      - name: journal-api
+        image: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com/journal-api:canary
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+# Journal API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: journal-api
+  namespace: history-app
+spec:
+  selector:
+    app: journal-api
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP

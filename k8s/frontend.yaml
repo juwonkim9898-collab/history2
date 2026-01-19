@@ -1,0 +1,128 @@
+# Frontend - Stable Deployment (React + Nginx)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-stable
+  namespace: history-app
+  labels:
+    app: frontend
+    version: stable
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: stable
+    spec:
+      containers:
+      - name: frontend
+        # TODO: 프론트엔드 ECR URL로 변경 필요
+        image: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com/frontend:stable
+        ports:
+        - containerPort: 80
+        env:
+        - name: VITE_API_BASE_URL
+          value: "http://library-api:8000"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+---
+# Frontend - Canary Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-canary
+  namespace: history-app
+  labels:
+    app: frontend
+    version: canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: frontend
+        version: canary
+    spec:
+      containers:
+      - name: frontend
+        # TODO: 프론트엔드 ECR URL로 변경 필요
+        image: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com/frontend:canary
+        ports:
+        - containerPort: 80
+        env:
+        - name: VITE_API_BASE_URL
+          value: "http://library-api:8000"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+---
+# Frontend Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: history-app
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP
+---
+# Frontend HPA
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend-hpa
+  namespace: history-app
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: frontend-stable
+  minReplicas: 2
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

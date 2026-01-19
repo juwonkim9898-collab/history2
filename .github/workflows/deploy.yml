@@ -1,0 +1,70 @@
+name: Build and Deploy to ECR
+
+on:
+  push:
+    branches:
+      - main      # main 브랜치에 푸시하면 stable 이미지 빌드
+      - canary    # canary 브랜치에 푸시하면 canary 이미지 빌드
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: frontend
+  ECR_REGISTRY: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Determine image tag
+      id: image-tag
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          echo "tag=stable" >> $GITHUB_OUTPUT
+        elif [[ "${{ github.ref }}" == "refs/heads/canary" ]]; then
+          echo "tag=canary" >> $GITHUB_OUTPUT
+        else
+          echo "tag=dev-${{ github.sha }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build Docker image
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.image-tag.outputs.tag }} .
+        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.image-tag.outputs.tag }} \
+                   $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+
+    - name: Push Docker image to ECR
+      run: |
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.image-tag.outputs.tag }}
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+
+    - name: Deploy to EKS (optional)
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # kubectl 설정이 되어 있다면 자동 배포
+        # kubectl rollout restart deployment/frontend-stable -n history-app
+        echo "Deployment step - configure kubectl if needed"
+
+    - name: Summary
+      run: |
+        echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Image Tag**: ${{ steps.image-tag.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit SHA**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **ECR Image**: $ECR_REGISTRY/$ECR_REPOSITORY:${{ steps.image-tag.outputs.tag }}" >> $GITHUB_STEP_SUMMARY

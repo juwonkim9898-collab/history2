@@ -1,0 +1,109 @@
+# Image Generator API - Stable Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-generator-api-stable
+  namespace: history-app
+  labels:
+    app: image-generator-api
+    version: stable
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: image-generator-api
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: image-generator-api
+        version: stable
+    spec:
+      containers:
+      - name: image-generator-api
+        image: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com/image-generator-api:stable
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+# Image Generator API - Canary Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: image-generator-api-canary
+  namespace: history-app
+  labels:
+    app: image-generator-api
+    version: canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: image-generator-api
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: image-generator-api
+        version: canary
+    spec:
+      containers:
+      - name: image-generator-api
+        image: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com/image-generator-api:canary
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+---
+# Image Generator API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: image-generator-api
+  namespace: history-app
+spec:
+  selector:
+    app: image-generator-api
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP

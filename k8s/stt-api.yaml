@@ -1,0 +1,109 @@
+# STT API - Stable Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stt-api-stable
+  namespace: history-app
+  labels:
+    app: stt-api
+    version: stable
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: stt-api
+      version: stable
+  template:
+    metadata:
+      labels:
+        app: stt-api
+        version: stable
+    spec:
+      containers:
+      - name: stt-api
+        image: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com/stt-api:stable
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+# STT API - Canary Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stt-api-canary
+  namespace: history-app
+  labels:
+    app: stt-api
+    version: canary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stt-api
+      version: canary
+  template:
+    metadata:
+      labels:
+        app: stt-api
+        version: canary
+    spec:
+      containers:
+      - name: stt-api
+        image: 355627705292.dkr.ecr.ap-northeast-2.amazonaws.com/stt-api:canary
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 15
+          periodSeconds: 5
+---
+# STT API Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: stt-api
+  namespace: history-app
+spec:
+  selector:
+    app: stt-api
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: ClusterIP

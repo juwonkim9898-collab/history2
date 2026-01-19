@@ -1,0 +1,18 @@
+# ConfigMap - 공통 환경 변수
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: history-app
+data:
+  # Database
+  DB_HOST: "192.168.0.163"
+  DB_PORT: "5432"
+  DB_NAME: "testdb"
+  
+  # API URLs (내부 서비스 통신)
+  AUTH_API_URL: "http://auth-api:8000"
+  JOURNAL_API_URL: "http://journal-api:8000"
+  LIBRARY_API_URL: "http://library-api:8000"
+  IMAGE_GENERATOR_API_URL: "http://image-generator-api:8000"
+  STT_API_URL: "http://stt-api:8000"
